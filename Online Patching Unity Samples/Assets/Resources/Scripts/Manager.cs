@@ -24,10 +24,22 @@ public class Manager : MonoBehaviour
 
     IEnumerator Load()
     {
-        AsyncOperationHandle asyc = Addressables.LoadAssetAsync<GameObject>(name);
+        AsyncOperationHandle<GameObject> asyc = Addressables.LoadAssetAsync<GameObject>(name);
         yield return asyc.IsDone;
 
-        Debug.Log("ASSET LOADED");
+        Debug.Log("ASSET LOADED!");
+        while (asyc.PercentComplete < 1)
+        {
+            Debug.Log(asyc.PercentComplete);
+            yield return new WaitForFixedUpdate();
+        }
+
+        if(asyc.Status == AsyncOperationStatus.Succeeded)
+        {
+            GameObject obj = asyc.Result;
+            Addressables.Release(asyc);
+            Debug.Log("ASSET = " + obj.name);
+        }
     }
 
     IEnumerator PreloadDependencies()
@@ -36,5 +48,16 @@ public class Manager : MonoBehaviour
         yield return asyc.IsDone;
 
         Debug.Log("ASSET DOWNLOADED!");
+        while (asyc.PercentComplete < 1)
+        {
+            Debug.Log(asyc.PercentComplete);
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (asyc.Status == AsyncOperationStatus.Succeeded)
+        {
+            Addressables.Release(asyc);
+            Debug.Log("ASSET LOADING...");
+        }
     }
 }

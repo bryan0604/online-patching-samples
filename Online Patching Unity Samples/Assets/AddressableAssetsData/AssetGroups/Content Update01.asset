@@ -17,6 +17,11 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: d3484fed2fe27f943819c10ee0a22c87
   m_SerializeEntries:
+  - m_GUID: 3fd761d71fc69ac4eaf0b8e0b853442d
+    m_Address: Assets/Resources_moved/Prefabs/Boxer.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
   - m_GUID: 6cb02dbdfe9afeb4f94a08fcd3f0255e
     m_Address: Assets/Resources_moved/Prefabs/Archer.prefab
     m_ReadOnly: 0

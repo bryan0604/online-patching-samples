@@ -357,6 +357,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c72c88262db4fd4185017a0a042d2ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  key: Assets/Resources_moved/Prefabs/Boxer.prefab
+  name: Assets/Resources_moved/Prefabs/Boxer.prefab
+  isloaded: 0
 --- !u!4 &788683530
 Transform:
   m_ObjectHideFlags: 0
