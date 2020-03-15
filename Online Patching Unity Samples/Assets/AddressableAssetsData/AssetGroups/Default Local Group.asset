@@ -21,6 +21,8 @@ MonoBehaviour:
     m_Address: Assets/Resources_moved/Prefabs/Archer.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+    m_mainAssetType: UnityEngine.GameObject, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 3c1a4bb7dd10bec49ae40f66b236a5e4, type: 2}
   m_SchemaSet:
