@@ -4,43 +4,49 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 
 public class Manager : MonoBehaviour
 {
+    [SerializeField]
+    string filePath;
+    [SerializeField]
+    string fileKey;
     public AssetReference asset;
     private void Start()
     {
-        Addressables.InitializeAsync().Completed += InitialisePatchManager;
+        Addressables.InitializeAsync();
     }
 
-    void InitialisePatchManager(AsyncOperationHandle<IResourceLocator> response)
+    void LoadSpecificFile(string _path = null, string _key = null)
     {
-        Debug.Log(response);
-        CheckPatch(Addressables.CheckForCatalogUpdates());
+        StartCoroutine(loadingAsset(_path, _key));
     }
 
-    private void CheckPatch(AsyncOperationHandle<List<string>> callback)
+    IEnumerator loadingAsset(string _path = null, string _key = null)
     {
-        List<string> tempStorage = callback.Result;
-        if(tempStorage!=null)
-        Debug.Log(tempStorage.Count);
+        AsyncOperationHandle<IList<IResourceLocation>> handle = Addressables.LoadResourceLocationsAsync(_key);
 
-        StartCoroutine(Patching());
+        yield return handle.Status;
+
+        if(handle.Status == AsyncOperationStatus.Succeeded)
+        {
+            Debug.Log("Load succeeded! " + handle.Result + " count = " + handle.Result.Count);
+
+            AsyncOperationHandle<IResourceLocator> handler = Addressables.LoadContentCatalogAsync(Application.streamingAssetsPath+ "/catalog_2020.03.15.05.57.56.json");
+
+            yield return handler.Status;
+        }
+
+        Debug.Log("Asset loaded in session");
+
+        asset.InstantiateAsync(new Vector3(0, 0, 0), Quaternion.identity);
     }
 
-    IEnumerator Patching()
+    private void Update()
     {
-        AsyncOperationHandle<GameObject> c = asset.InstantiateAsync(new Vector3(0, 0, 0), Quaternion.identity);
-
-        yield return c.IsDone;
-
-        Debug.LogError("Done - Instiantiate");
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+            LoadSpecificFile(Application.streamingAssetsPath, fileKey);
     }
-
-    
-    //private IEnumerable<string> Test(string callbackResult)
-    //{
-    //    return Addressables.ca;
-    //}
 }

@@ -38,13 +38,13 @@ MonoBehaviour:
       - m_Id: 79d4e2cf503f3d047958f7f777600092
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
       - m_Id: eb6707617491a3448b7d056dffe7025f
-        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/StandaloneWindows64'
       - m_Id: 68b2bea5887d65e489a6f751128a90b6
-        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/StandaloneWindows64'
       - m_Id: 6913061dece8b064784b63221209f9fd
-        m_Value: ServerData/patch/[BuildTarget]
+        m_Value: ServerData/patch/StandaloneWindows64
       - m_Id: 6b1e7983cffdd0c4e8d95c72afb73923
-        m_Value: https://storage.googleapis.com/cloud_patching_sample/patch/[BuildTarget]
+        m_Value: https://storage.googleapis.com/cloud_patching_sample/patch/StandaloneWindows64
     m_ProfileEntryNames:
     - m_Id: 79d4e2cf503f3d047958f7f777600092
       m_Name: BuildTarget
