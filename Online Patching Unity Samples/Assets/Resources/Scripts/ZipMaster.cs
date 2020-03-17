@@ -23,15 +23,18 @@ public class ZipMaster : MonoBehaviour
             ValidateStreamAssets();
     }
 
-    List<string> ValidateStreamAssets()
+    public void UnzipFile()
+    {
+        LoadZipFile(Application.streamingAssetsPath + filePath);
+    }
+
+    public void ValidateStreamAssets()
     {
         string[] tracker_files = Directory.GetFiles(Application.streamingAssetsPath);
         for (int i = 0; i < tracker_files.Length; i++)
         {
             Debug.Log("File found " + i + "." + tracker_files[i]);
         }
-
-        return tracker_files.ToList();
     }
 
     void LoadZipFile(string FilePath)

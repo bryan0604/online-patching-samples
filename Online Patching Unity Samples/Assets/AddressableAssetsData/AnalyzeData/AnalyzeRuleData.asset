@@ -21,3 +21,5 @@ MonoBehaviour:
     Results: []
   - RuleName: Build Bundle Layout
     Results: []
+  - RuleName: Check Sprite Atlas to Addressable Duplicate Dependencies
+    Results: []
