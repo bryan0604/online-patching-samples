@@ -74,7 +74,7 @@ public class Manager : MonoBehaviour
         {
             Debug.Log("Load succeeded! " + handle.Result + " count = " + handle.Result.Count);
 
-            AsyncOperationHandle<IResourceLocator> handler = Addressables.LoadContentCatalogAsync(Application.streamingAssetsPath + "/catalog_2020.03.17.08.31.44.json");
+            AsyncOperationHandle<IResourceLocator> handler = Addressables.LoadContentCatalogAsync(Application.streamingAssetsPath + "/catalog_2020.03.17.16.27.30.json");
 
             yield return handler.Status;
             Addressables.ClearResourceLocators();

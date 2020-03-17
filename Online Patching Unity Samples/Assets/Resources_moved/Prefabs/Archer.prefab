@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71f3db9426732e74e8536f9f83f059d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  job: 2
+  job: 0
   job_indicator:
   - {r: 1, g: 0, b: 0, a: 0}
   - {r: 0.50582266, g: 1, b: 0, a: 0}

@@ -25,7 +25,7 @@ public class ZipMaster : MonoBehaviour
 
     public void UnzipFile()
     {
-        LoadZipFile(Application.streamingAssetsPath + filePath);
+        LoadZipFile(Application.persistentDataPath + filePath);
     }
 
     public void ValidateStreamAssets()
