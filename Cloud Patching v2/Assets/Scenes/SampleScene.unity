@@ -397,9 +397,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38bd375fb294047189c473fb029e3c31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  image:
+  image_ar:
     m_AssetGUID: b3597c6d8e7154f599fa08455445b9da
     m_SubObjectName: 
+  image_go: {fileID: 8800494568661691888, guid: b3597c6d8e7154f599fa08455445b9da,
+    type: 3}
   parent_canvas: {fileID: 248396156}
 --- !u!4 &1267084237
 Transform:

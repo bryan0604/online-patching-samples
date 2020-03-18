@@ -25,9 +25,9 @@
 
 //    public void UnzipFile()
 //    {
-//        if(!Directory.Exists(Application.persistentDataPath+ "/dlc" ))
+//        if (!Directory.Exists(Application.persistentDataPath + "/dlc"))
 //        {
-//            Directory.CreateDirectory(Application.persistentDataPath +"/dlc");
+//            Directory.CreateDirectory(Application.persistentDataPath + "/dlc");
 //        }
 
 
@@ -52,7 +52,7 @@
 //            yield break;
 //        }
 
-//        // Read file
+//        Read file
 //        FileStream fs = null;
 //        try
 //        {
@@ -65,10 +65,10 @@
 
 //        if (fs != null)
 //        {
-//            //try
-//            //{
-//                // Read zip file
-//                ZipFile zf = new ZipFile(fs);
+//            try
+//            {
+//                Read zip file
+//               ZipFile zf = new ZipFile(fs);
 //                int numFiles = 0;
 
 //                if (zf.TestArchive(true) == false)
@@ -82,51 +82,51 @@
 //                {
 //                    foreach (ZipEntry zipEntry in zf)
 //                    {
-//                    // Ignore directories
-//                    try
-//                    {
-//                        if (!zipEntry.IsFile)
-//                            continue;
+//                        Ignore directories
+//                        try
+//                        {
+//                            if (!zipEntry.IsFile)
+//                                continue;
 
-//                        string entryFileName = zipEntry.Name;
+//                            string entryFileName = zipEntry.Name;
 
-//                        // Skip .DS_Store files (these appear on OSX)
+//                            Skip.DS_Store files(these appear on OSX)
 //                        if (entryFileName.Contains("DS_Store"))
-//                            continue;
+//                                continue;
 
-//                        Debug.Log("Unpacking zip file entry: " + entryFileName);
+//                            Debug.Log("Unpacking zip file entry: " + entryFileName);
 
-//                        byte[] buffer = new byte[4096];     // 4K is optimum
-//                        Stream zipStream = zf.GetInputStream(zipEntry);
+//                            byte[] buffer = new byte[4096];     // 4K is optimum
+//                            Stream zipStream = zf.GetInputStream(zipEntry);
 
-//                        // Manipulate the output filename here as desired.
+//                            Manipulate the output filename here as desired.
 //                        string fullZipToPath = Application.persistentDataPath + "/dlc/" + Path.GetFileName(entryFileName);
 
-//                        // Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
-//                        // of the file, but does not waste memory.
-//                        // The "using" will close the stream even if an exception occurs.
+//                            Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
+//                         of the file, but does not waste memory.
+//                         The "using" will close the stream even if an exception occurs.
 //                        using (FileStream streamWriter = File.Create(fullZipToPath))
-//                        {
-//                            StreamUtils.Copy(zipStream, streamWriter, buffer);
+//                            {
+//                                StreamUtils.Copy(zipStream, streamWriter, buffer);
+//                            }
 //                        }
+//                        catch (Exception ex)
+//                        {
+//                            Debug.LogError(ex);
+//                        }
+//                        numFiles++;
+//                        yield return new WaitForSeconds(0.25f);
 //                    }
-//                    catch (Exception ex)
-//                    {
-//                        Debug.LogError(ex);
-//                    }
-//                    numFiles++;
-//                    yield return new WaitForSeconds(0.25f);
-//                }
 
-//                zf.IsStreamOwner = false;
-//                zf.Close();
-//                fs.Close();
+//                    zf.IsStreamOwner = false;
+//                    zf.Close();
+//                    fs.Close();
+//                }
 //            }
-//            //}
-//            //catch (Exception ex)
-//            //{
-//            //    Debug.Log("Zip file error! " + ex);
-//            //}
+//            catch (Exception ex)
+//            {
+//                Debug.Log("Zip file error! " + ex);
+//            }
 //        }
 //    }
 //}
