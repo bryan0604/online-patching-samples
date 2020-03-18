@@ -11,7 +11,7 @@ public class Cloud : MonoBehaviour
 
     void InstantiateAsyncFromCloud()
     {
-        image_ar.InstantiateAsync(new Vector3(), Quaternion.identity, parent_canvas);    
+        image_ar.InstantiateAsync(new Vector3(), Quaternion.identity, parent_canvas);
     }
 
     void InstantiateFromLocalClient()
@@ -19,9 +19,42 @@ public class Cloud : MonoBehaviour
         Instantiate(image_go , parent_canvas);
     }
 
-    void CheckForUpdates()
+    IEnumerator CheckForUpdates()
     {
+        yield return new WaitForSeconds(1f);
+        Addressables.InitializeAsync().Completed += (callback_init =>
+        {
+            Addressables.CheckForCatalogUpdates().Completed += (callback_update => 
+            {
+                Debug.LogError(callback_update.Result.Count);
+                if(callback_update.Result.Count> 0)
+                {
+                    Addressables.UpdateCatalogs().Completed += (callback_patch =>
+                    {
 
+                    });
+                }
+                else
+                {
+                    //
+                }
+            });
+        });
+    }
+
+    void LoadAssets()
+    {
+        image_ar.LoadAssetAsync<GameObject>().Completed += (callback =>
+        {
+            Debug.Log(callback.Status);
+            if (callback.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+            {
+                //image_ar.InstantiateAsync(new Vector3(), Quaternion.identity, parent_canvas).Completed += (state =>
+                //{
+                //    Debug.Log(state.Result);
+                //});
+            }
+        });
     }
 
     private void Update()
@@ -30,13 +63,17 @@ public class Cloud : MonoBehaviour
         {
             InstantiateAsyncFromCloud();
         }
-        else if(Input.GetKeyDown(KeyCode.LeftCommand))
+        else if(Input.GetKeyDown(KeyCode.LeftControl))
         {
             InstantiateFromLocalClient();
         }
         else if(Input.GetKeyDown(KeyCode.Escape))
         {
-
+            StartCoroutine(CheckForUpdates());
+        }
+        else if(Input.GetKeyDown(KeyCode.LeftAlt))
+        {
+            LoadAssets();
         }
     }
 }
