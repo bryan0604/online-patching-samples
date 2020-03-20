@@ -13,89 +13,43 @@ public class Cloud : MonoBehaviour
     public GameObject image_go;
     public Transform parent_canvas;
     public List<Button> Buttons = new List<Button>();
+    [SerializeField]
+    public static bool CloudReady
+    {
+        get { return isCloudInit; }
+    }
+
+    [SerializeField]
+    static bool isCloudInit = false;
 
     private void Awake()
     {
         Buttons[0].onClick.AddListener(() => StartCoroutine(CheckForUpdates()));
-        Buttons[1].onClick.AddListener(()=>InstantiateFromLocalClient());
+        Buttons[1].onClick.AddListener(() => InstantiateFromLocalClient());
         Buttons[2].onClick.AddListener(InstantiateAsyncFromCloud);
         Buttons[3].onClick.AddListener(LoadAssets);
-        StartCoroutine(InitializationProgress());
+
     }
 
-    IEnumerator InitializationProgress()
+    [RuntimeInitializeOnLoadMethod]
+    static void Init()
     {
-        AsyncOperationHandle init_op = Addressables.InitializeAsync();
+        Addressables.InitializeAsync().Completed += InitDone;
+    }
 
-        while (init_op.PercentComplete >= 1)
+    static void InitDone(AsyncOperationHandle<IResourceLocator> obj)
+    {
+        Debug.Log(obj.Status);
+
+        if(obj.Status == AsyncOperationStatus.Succeeded)
         {
-            yield return new WaitForFixedUpdate();
 
-            Debug.Log(init_op.PercentComplete);
+            isCloudInit = true;
         }
-
-        Debug.LogWarning("Initialization done");
     }
 
     IEnumerator CheckForUpdates()
     {
-        //yield return new WaitForSeconds(1f);
-        //Addressables.InitializeAsync().Completed += (callback_init =>
-        //{
-        //    Addressables.CheckForCatalogUpdates(false).Completed += (callback_update =>
-        //    {
-        //        Debug.LogError(callback_update.Result.Count);
-        //        if (callback_update.Result.Count > 0)
-        //        {
-        //            Addressables.UpdateCatalogs(null, false).Completed += (callback_patch =>
-        //            {
-        //                Debug.Log(callback_patch.Result[0].LocatorId + "|" + callback_patch.Result[0].Keys);
-
-
-        //                //Debug.Log(Addressables.BuildPath);
-        //                //Debug.Log(Addressables.PlayerBuildDataPath);
-        //                //Debug.Log(Addressables.RuntimePath);
-        //                //Debug.Log(Addressables.ResourceLocators);
-
-        //                foreach (var item in Addressables.ResourceLocators)
-        //                {
-        //                    ResourceLocationMap map = (ResourceLocationMap)item;
-
-        //                    Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
-
-        //                    foreach (var loc in locations)
-        //                    {
-        //                        if (loc.Value[0].ToString().Contains("https://storage.googleapis.com/cloud_patching_sample/"))
-        //                        {
-        //                            Debug.Log(loc.Key);
-        //                            Debug.Log(loc.Value[0]);
-        //                            Debug.Log(loc.Value[0].DependencyHashCode);
-        //                            Debug.Log(loc.Value[0].Dependencies);
-        //                            Debug.Log(loc.Value[0].PrimaryKey);
-        //                            Addressables.GetDownloadSizeAsync(loc.Key).Completed += (cb_getsize =>
-        //                            {
-        //                                while (cb_getsize.PercentComplete >= 1)
-        //                                {
-        //                                    yield return new WaitForFixedUpdate();
-        //                                }
-        //                            });
-
-        //                            Addressables.DownloadDependenciesAsync(loc.Key, false).Completed += (cb_download =>
-        //                            {
-        //                                Debug.Log("Download " + cb_download.Status);
-        //                            });
-
-        //                            break;
-        //                        }
-        //                    }
-
-        //                    continue;
-        //                }
-        //            });
-        //        }
-        //    });
-        //});
-
         AsyncOperationHandle<List<string>> cb_checkforupdates = Addressables.CheckForCatalogUpdates(false);
         yield return cb_checkforupdates.Result;
 
@@ -104,13 +58,80 @@ public class Cloud : MonoBehaviour
             Debug.LogError(cb_checkforupdates.Result.Count);
             if(cb_checkforupdates.Result.Count > 0)
             {
-                Debug.LogError("There is an update that you can download");
+                Debug.LogError("There is an update that you can download = " + cb_checkforupdates.Result[0]);
+                AsyncOperationHandle<List<IResourceLocator>> cb_updatecatalog = Addressables.UpdateCatalogs(cb_checkforupdates.Result, false);
+
+                yield return cb_updatecatalog.Result;
+
+                Debug.Log("Catalog updates status = " + cb_updatecatalog.Status);
+                //StartCoroutine(DownloadUpdates());
             }
             else
             {
                 Debug.LogError("There isn't any update...");
             }
         }
+    }
+
+    IEnumerator DownloadUpdates()
+    {
+        foreach (var item in Addressables.ResourceLocators)
+        {
+            ResourceLocationMap map = (ResourceLocationMap)item;
+
+            Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
+
+            foreach (var loc in locations)
+            {
+                //Debug.Log(loc.Key);
+                //Debug.Log(loc.Value[0]);
+                //Debug.Log(loc.Value[0].DependencyHashCode);
+                //Debug.Log(loc.Value[0].Dependencies);
+                //Debug.Log(loc.Value[0].PrimaryKey);
+                if (loc.Value[0].ToString().Contains("https://storage.googleapis.com/cloud_patching_sample/"))
+                {
+                    //Debug.Log(loc.Key);
+                    //Debug.Log(loc.Value[0]);
+                    //Debug.Log(loc.Value[0].DependencyHashCode);
+                    //Debug.Log(loc.Value[0].Dependencies);
+                    //Debug.Log(loc.Value[0].PrimaryKey);
+
+                    AsyncOperationHandle<long> cb_getdownloadsize = Addressables.GetDownloadSizeAsync(loc.Key);
+
+                    yield return cb_getdownloadsize.Result;
+
+                    Debug.Log("Download size = " + cb_getdownloadsize.Result + " status = " + cb_getdownloadsize.Status);
+
+                    AsyncOperationHandle cb_downloaddep = Addressables.DownloadDependenciesAsync(loc.Key, false);
+
+                    while (cb_downloaddep.PercentComplete < 1)
+                    {
+                        Debug.Log(cb_downloaddep.PercentComplete);
+                        yield return new WaitForFixedUpdate();
+                    }
+
+                    yield return cb_downloaddep.Result;
+
+                    Debug.Log("Download status = " + cb_downloaddep.Status);
+
+                    //AsyncOperationHandle<List<IResourceLocator>> cb_updatecatalog = Addressables.UpdateCatalogs(_cb_checkforUpdates.Result, false);
+
+                    //yield return cb_updatecatalog.Result;
+
+                    //Debug.Log("Catalog updates status = " + cb_updatecatalog.Status);
+
+                    break;
+                }
+            }
+        }
+    }
+
+    public static AsyncOperationHandle<List<IResourceLocator>> UpdateCatalogs(IEnumerable<string> catalog = null, bool autoReleaseHandle = true)
+    {
+        AsyncOperationHandle<List<IResourceLocator>> final = new AsyncOperationHandle<List<IResourceLocator>>();
+
+        Debug.Log("H "+catalog );
+        return final;
     }
 
     void LoadAssets()
