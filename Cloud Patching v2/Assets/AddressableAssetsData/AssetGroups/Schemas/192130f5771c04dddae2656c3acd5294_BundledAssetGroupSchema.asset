@@ -19,7 +19,7 @@ MonoBehaviour:
     m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider
   m_ForceUniqueProvider: 0
-  m_UseAssetBundleCache: 1
+  m_UseAssetBundleCache: 0
   m_UseAssetBundleCrc: 1
   m_Timeout: 0
   m_ChunkedTransfer: 0
@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Id: 20f8bc4c6f60c49178daa7e4e4389454
   m_LoadPath:
     m_Id: https://storage.googleapis.com/cloud_patching_sample/bundle
-  m_BundleMode: 0
+  m_BundleMode: 1
   m_AssetBundleProviderType:
     m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider

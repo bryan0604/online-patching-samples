@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -13,44 +15,102 @@ public class Cloud : MonoBehaviour
     public GameObject image_go;
     public Transform parent_canvas;
     public List<Button> Buttons = new List<Button>();
-    [SerializeField]
-    public static bool CloudReady
-    {
-        get { return isCloudInit; }
-    }
+  
+    [SerializeField] bool isCloudInit = false;
+    [SerializeField] bool isCatalogChecked = false;
 
-    [SerializeField]
-    static bool isCloudInit = false;
 
     private void Awake()
     {
-        Buttons[0].onClick.AddListener(() => StartCoroutine(CheckForUpdates()));
+        Buttons[0].onClick.AddListener(() => StartCoroutine(Process()));
         Buttons[1].onClick.AddListener(() => InstantiateFromLocalClient());
         Buttons[2].onClick.AddListener(InstantiateAsyncFromCloud);
         Buttons[3].onClick.AddListener(LoadAssets);
 
-    }
-
-    [RuntimeInitializeOnLoadMethod]
-    static void Init()
-    {
         Addressables.InitializeAsync().Completed += InitDone;
+        StartCoroutine(Process());
     }
-
-    static void InitDone(AsyncOperationHandle<IResourceLocator> obj)
+    void InitDone(AsyncOperationHandle<IResourceLocator> obj)
     {
         Debug.Log(obj.Status);
 
-        if(obj.Status == AsyncOperationStatus.Succeeded)
+        if (obj.Status == AsyncOperationStatus.Succeeded)
         {
 
             isCloudInit = true;
         }
     }
 
+    void OnCheckingCatalogs(AsyncOperationHandle<List<string>> cb_checkforupdates)
+    {
+        Debug.Log(cb_checkforupdates.Status);
+
+        if(cb_checkforupdates.Status == AsyncOperationStatus.Succeeded)
+        {
+            isCatalogChecked = true;
+
+            Debug.LogError(cb_checkforupdates.Result.Count);
+
+            foreach (var item in Addressables.ResourceLocators)
+            {
+                ResourceLocationMap map = (ResourceLocationMap)item;
+
+                Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
+
+                foreach (var loc in locations)
+                {
+                    Debug.Log(loc.Value[0]);
+                    if (loc.Value[0].ToString().Contains("https://storage.googleapis.com/cloud_patching_sample/"))
+                    {
+                        //Debug.Log(loc.Value[0]);
+                        Debug.Log(loc.Key + " | " + loc.Value[0].PrimaryKey );
+                        Addressables.GetDownloadSizeAsync("default").Completed += OnGettingDownloadSize;
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    void OnUpdateCatalogs(AsyncOperationHandle<List<IResourceLocator>> cb_updatecatalog)
+    {
+        Debug.Log(cb_updatecatalog.Status);
+
+        foreach (var loc in cb_updatecatalog.Result)
+        {
+            Debug.Log(loc.Keys);
+            Debug.Log(loc.LocatorId);
+        }
+    }
+
+    void OnGettingDownloadSize(AsyncOperationHandle<System.Int64> cb_getdownloadsize)
+    {
+        Debug.Log("Download size = " + cb_getdownloadsize.Result + " status = " + cb_getdownloadsize.Status + " " + cb_getdownloadsize.IsDone);
+
+
+    }
+
+    IEnumerator Process()
+    {
+        while (isCloudInit != true)
+        {
+            yield return new WaitForFixedUpdate();
+        }
+
+        Addressables.CheckForCatalogUpdates().Completed += OnCheckingCatalogs;
+
+        while (isCatalogChecked != true)
+        {
+            yield return new WaitForFixedUpdate();
+        }
+
+
+    }
+
     IEnumerator CheckForUpdates()
     {
-        AsyncOperationHandle<List<string>> cb_checkforupdates = Addressables.CheckForCatalogUpdates(false);
+        AsyncOperationHandle<List<string>> cb_checkforupdates = Addressables.CheckForCatalogUpdates();
         yield return cb_checkforupdates.Result;
 
         if(cb_checkforupdates.Status == AsyncOperationStatus.Succeeded)
@@ -70,6 +130,10 @@ public class Cloud : MonoBehaviour
             {
                 Debug.LogError("There isn't any update...");
             }
+        }
+        else
+        {
+            Debug.LogError("Failed to locate");
         }
     }
 
