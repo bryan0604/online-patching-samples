@@ -644,6 +644,14 @@ MonoBehaviour:
   - {fileID: 572691609}
   - {fileID: 403159562}
   - {fileID: 1870477781}
+  proceedDownloadingPatch: 0
+  isCheckedPatch: 0
+  agreedDownload: 1
+  pendingDownload: 0
+  requireDownloadPatch: 0
+  downloadKey: 
+  isCloudInit: 0
+  isCatalogChecked: 0
 --- !u!4 &1267084237
 Transform:
   m_ObjectHideFlags: 0

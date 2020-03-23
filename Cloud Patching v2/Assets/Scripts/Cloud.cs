@@ -15,7 +15,12 @@ public class Cloud : MonoBehaviour
     public GameObject image_go;
     public Transform parent_canvas;
     public List<Button> Buttons = new List<Button>();
-  
+    public bool proceedDownloadingPatch = false;
+    public bool isCheckedPatch = false;
+    public bool agreedDownload = false;
+    public bool pendingDownload = false;
+    public bool requireDownloadPatch = false;
+    public string downloadKey = "";
     [SerializeField] bool isCloudInit = false;
     [SerializeField] bool isCatalogChecked = false;
 
@@ -50,6 +55,12 @@ public class Cloud : MonoBehaviour
             isCatalogChecked = true;
 
             Debug.LogError(cb_checkforupdates.Result.Count);
+            if(cb_checkforupdates.Result.Count == 0)
+            {
+                isCheckedPatch = true;
+                requireDownloadPatch = false;
+                return;
+            }
 
             foreach (var item in Addressables.ResourceLocators)
             {
@@ -59,17 +70,31 @@ public class Cloud : MonoBehaviour
 
                 foreach (var loc in locations)
                 {
-                    Debug.Log(loc.Value[0]);
-                    if (loc.Value[0].ToString().Contains("https://storage.googleapis.com/cloud_patching_sample/"))
-                    {
-                        //Debug.Log(loc.Value[0]);
-                        Debug.Log(loc.Key + " | " + loc.Value[0].PrimaryKey );
-                        Addressables.GetDownloadSizeAsync("default").Completed += OnGettingDownloadSize;
+                    //Debug.Log(loc.Key);
+                    //Debug.Log(loc.Value[0]);
+                    //Debug.Log(loc.Value[0].DependencyHashCode);
+                    //Debug.Log(loc.Value[0].Dependencies);
+                    //Debug.Log(loc.Value[0].PrimaryKey);
+                    //Debug.Log(loc.Value[0].Data);
+                    //Debug.Log(loc.Value[0].PrimaryKey);
+                    //Debug.Log(loc.Value[0].ProviderId);
 
+                    if (loc.Key.Equals("default"))
+                    {
+                        Debug.Log("Found the packet!");
+                        Addressables.GetDownloadSizeAsync(loc.Key).Completed += OnGettingDownloadSize;
+                        downloadKey = loc.Key.ToString();
                         break;
+                    }
+                    else
+                    {
+                        continue;
                     }
                 }
             }
+
+            //isCheckedPatch = true;
+            //requireDownloadPatch = false;
         }
     }
 
@@ -88,7 +113,8 @@ public class Cloud : MonoBehaviour
     {
         Debug.Log("Download size = " + cb_getdownloadsize.Result + " status = " + cb_getdownloadsize.Status + " " + cb_getdownloadsize.IsDone);
 
-
+        isCheckedPatch = true;
+        requireDownloadPatch = true;
     }
 
     IEnumerator Process()
@@ -100,11 +126,48 @@ public class Cloud : MonoBehaviour
 
         Addressables.CheckForCatalogUpdates().Completed += OnCheckingCatalogs;
 
-        while (isCatalogChecked != true)
+        while (isCheckedPatch != true)
         {
             yield return new WaitForFixedUpdate();
         }
 
+        Debug.Log("Patch checked!");
+
+        if(requireDownloadPatch)
+        {
+
+            Debug.Log("Pending download...");
+            while (pendingDownload != true)
+            {
+                yield return new WaitForFixedUpdate();
+                if (proceedDownloadingPatch)
+                {
+                    pendingDownload = proceedDownloadingPatch;
+                    Debug.Log("patch responded");
+                }
+            }
+
+            if(agreedDownload)
+            {
+                Debug.Log("Downloading patch...");
+
+                AsyncOperationHandle cb_downloads = Addressables.DownloadDependenciesAsync(downloadKey, false);
+
+                while (cb_downloads.PercentComplete < 1)
+                {
+                    yield return new WaitForFixedUpdate();
+
+                    Debug.Log(cb_downloads.PercentComplete);
+                }
+                Debug.Log("Download done" + cb_downloads.Status);
+
+                Addressables.UpdateCatalogs().Completed += OnUpdateCatalogs;
+            }
+            else
+            {
+                Debug.Log("No downloading...");
+            }
+        }
 
     }
 
@@ -190,13 +253,13 @@ public class Cloud : MonoBehaviour
         }
     }
 
-    public static AsyncOperationHandle<List<IResourceLocator>> UpdateCatalogs(IEnumerable<string> catalog = null, bool autoReleaseHandle = true)
-    {
-        AsyncOperationHandle<List<IResourceLocator>> final = new AsyncOperationHandle<List<IResourceLocator>>();
+    //public static AsyncOperationHandle<List<IResourceLocator>> UpdateCatalogs(IEnumerable<string> catalog = null, bool autoReleaseHandle = true)
+    //{
+    //    AsyncOperationHandle<List<IResourceLocator>> final = new AsyncOperationHandle<List<IResourceLocator>>();
 
-        Debug.Log("H "+catalog );
-        return final;
-    }
+    //    Debug.Log("H "+catalog );
+    //    return final;
+    //}
 
     void LoadAssets()
     {
