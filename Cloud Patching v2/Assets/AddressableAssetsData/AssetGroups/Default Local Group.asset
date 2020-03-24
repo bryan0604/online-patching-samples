@@ -17,6 +17,20 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 192130f5771c04dddae2656c3acd5294
   m_SerializeEntries:
+  - m_GUID: 074b281fe0814ef449e774994454a406
+    m_Address: Assets/Prefabs/Background.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
+    m_mainAssetType: UnityEngine.GameObject, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: 7b2ee1f447ab8914e9a5a4ca90b9e3e8
+    m_Address: Assets/Prefabs/Item Shop Panel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
+    m_mainAssetType: UnityEngine.GameObject, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
   - m_GUID: b3597c6d8e7154f599fa08455445b9da
     m_Address: Assets/Prefabs/Image00.prefab
     m_ReadOnly: 0
