@@ -21,6 +21,7 @@ public class Cloud : MonoBehaviour
     public bool agreedDownload = false;
     public bool pendingDownload = false;
     public bool requireDownloadPatch = false;
+    public bool downloadDone = false;
     public string downloadKey = "";
     [SerializeField] bool isCloudInit = false;
     [SerializeField] bool isCatalogChecked = false;
@@ -60,22 +61,27 @@ public class Cloud : MonoBehaviour
 
             foreach (var item in Addressables.ResourceLocators)
             {
-                ResourceLocationMap map = (ResourceLocationMap)item;
+                Debug.Log(item + " || " + item.Keys + " || ");
 
-                Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
-
-                foreach (var loc in locations)
+                if(item.GetType() == typeof(ResourceLocationMap))
                 {
-                    if (loc.Key.Equals("default"))
+                    ResourceLocationMap map = (ResourceLocationMap)item;
+
+                    Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
+
+                    foreach (var loc in locations)
                     {
-                        Debug.Log("Found the packet!");
-                        Addressables.GetDownloadSizeAsync(loc.Key).Completed += OnGettingDownloadSize;
-                        downloadKey = loc.Key.ToString();
-                        break;
-                    }
-                    else
-                    {
-                        continue;
+                        if (loc.Key.Equals("default"))
+                        {
+                            Debug.Log("Found the packet!");
+                            Addressables.GetDownloadSizeAsync(loc.Key).Completed += OnGettingDownloadSize;
+                            downloadKey = loc.Key.ToString();
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                 }
             }
@@ -85,7 +91,7 @@ public class Cloud : MonoBehaviour
     void OnUpdateCatalogs(AsyncOperationHandle<List<IResourceLocator>> cb_updatecatalog)
     {
         Debug.Log(cb_updatecatalog.Status);
-
+        downloadDone = true;
         foreach (var loc in cb_updatecatalog.Result)
         {
             Debug.Log(loc.Keys);
@@ -148,6 +154,18 @@ public class Cloud : MonoBehaviour
                 Debug.Log("Download done" + cb_downloads.Status);
 
                 Addressables.UpdateCatalogs().Completed += OnUpdateCatalogs;
+
+                while(downloadDone != true)
+                {
+                    yield return new WaitForSeconds(0.25f);
+                }
+
+                if (downloadDone)
+                {
+                    StartCoroutine(LoadAssets(asset_background));
+                    yield return new WaitForSeconds(0.25f);
+                    StartCoroutine(LoadAssets(asset_prem_content));
+                }
             }
             else
             {
@@ -166,6 +184,7 @@ public class Cloud : MonoBehaviour
 
     IEnumerator LoadAssets(AssetReference _asset)
     {
+        #region UNUSED Codes
         //if(isSpawning)
         //{
         //    while (isSpawning != false)
@@ -174,6 +193,7 @@ public class Cloud : MonoBehaviour
         //    }
         //}
         //isSpawning = true;
+        #endregion
         yield return new WaitForSeconds(0.25f);
         Addressables.LoadAssetAsync<GameObject>(_asset).Completed += (callback =>
         {
