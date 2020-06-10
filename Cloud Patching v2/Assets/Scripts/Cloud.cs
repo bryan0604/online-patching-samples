@@ -26,11 +26,12 @@ public class Cloud : MonoBehaviour
     [SerializeField] bool isCloudInit = false;
     [SerializeField] bool isCatalogChecked = false;
     bool isSpawning = false;
-
+    UserInterface UI_MANAGER;
 
     private void Awake()
     {
         Buttons[0].onClick.AddListener(() => StartCoroutine(Process()));
+        UI_MANAGER = GetComponent<UserInterface>();
     }
     void InitDone(AsyncOperationHandle<IResourceLocator> obj)
     {
@@ -50,13 +51,21 @@ public class Cloud : MonoBehaviour
         if(cb_checkforupdates.Status == AsyncOperationStatus.Succeeded)
         {
             isCatalogChecked = true;
-
+            Debug.LogError(cb_checkforupdates.Task.Result.Count);
             Debug.LogError(cb_checkforupdates.Result.Count);
+            
             if(cb_checkforupdates.Result.Count == 0)
             {
                 isCheckedPatch = true;
                 requireDownloadPatch = false;
                 return;
+            }
+            else
+            {
+                for (int i = 0; i < cb_checkforupdates.Result.Count; i++)
+                {
+                    Debug.LogError("patch - " + cb_checkforupdates.Result[i]);
+                }
             }
 
             foreach (var item in Addressables.ResourceLocators)
@@ -74,6 +83,8 @@ public class Cloud : MonoBehaviour
                         if (loc.Key.Equals("default"))
                         {
                             Debug.Log("Found the packet!");
+                 
+                            UI_MANAGER.Initialise(OnDownload, OnDownloadReject);
                             Addressables.GetDownloadSizeAsync(loc.Key).Completed += OnGettingDownloadSize;
                             downloadKey = loc.Key.ToString();
                             break;
@@ -105,6 +116,19 @@ public class Cloud : MonoBehaviour
 
         isCheckedPatch = true;
         requireDownloadPatch = true;
+
+
+        UI_MANAGER.PopulateContent(cb_getdownloadsize.Result.ToString());
+    }
+
+    void OnDownload()
+    {
+        proceedDownloadingPatch = true;
+    }
+
+    void OnDownloadReject()
+    {
+        Debug.LogError("Sorry gotta update dude!");
     }
 
     IEnumerator Process()
@@ -150,8 +174,13 @@ public class Cloud : MonoBehaviour
                     yield return new WaitForFixedUpdate();
 
                     Debug.Log(cb_downloads.PercentComplete);
+
+                    UI_MANAGER.UpdateDynamicContent(cb_downloads.PercentComplete.ToString());
                 }
                 Debug.Log("Download done" + cb_downloads.Status);
+                yield return new WaitForSeconds(5f);
+
+                UI_MANAGER.RemoveAndClear();
 
                 Addressables.UpdateCatalogs().Completed += OnUpdateCatalogs;
 
