@@ -1543,6 +1543,8 @@ MonoBehaviour:
   downloadDone: 0
   foundpacket: 0
   autoUpdate: 0
+  isloadingAsset: 0
+  catalogKeyname: eee1
   downloadKey: 
   isCloudInit: 0
   isCatalogChecked: 0

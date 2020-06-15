@@ -9,6 +9,7 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.UI;
+using RestSharp;
 
 public class Cloud : MonoBehaviour
 {
@@ -25,11 +26,14 @@ public class Cloud : MonoBehaviour
     public bool downloadDone = false;
     public bool foundpacket = false;
     public bool autoUpdate = false;
+    public bool isloadingAsset = false;
+    public string catalogKeyname = "";
     public string downloadKey = "";
     [SerializeField] bool isCloudInit = false;
     [SerializeField] bool isCatalogChecked = false;
     bool isSpawning = false;
     UserInterface UI_MANAGER;
+    WaitForSeconds frequencyshort = new WaitForSeconds(0.5f);
 
     private void Awake()
     {
@@ -107,9 +111,9 @@ public class Cloud : MonoBehaviour
                         {
                             Debug.Log("Found the packet!");
                             foundpacket = true;
-                            UI_MANAGER.Initialise(OnDownload, OnDownloadReject);
-                            Addressables.GetDownloadSizeAsync(loc.Key).Completed += OnGettingDownloadSize;
+
                             downloadKey = loc.Key.ToString();
+                            StartCoroutine(CheckCatalogVersion(downloadKey));
                             break;
                         }
                         else
@@ -227,18 +231,26 @@ public class Cloud : MonoBehaviour
         else
         {
             Debug.Log("No patch to update...");
-
-            StartCoroutine(LoadAssets(asset_background));
-            yield return new WaitForSeconds(0.25f);
-            StartCoroutine(LoadAssets(asset_prem_content));
+            InitialiseAssetsSpawn();
         }
+    }
+    
+    void InitialiseAssetsSpawn()
+    {
+        StartCoroutine(LoadAssets(asset_background));
+        StartCoroutine(LoadAssets(asset_prem_content));
     }
 
     IEnumerator LoadAssets(AssetReference _asset)
     {
-        yield return new WaitForSeconds(0.25f);
+        while (isloadingAsset != false)
+        {
+            yield return frequencyshort;
+        }
+
         Addressables.LoadAssetAsync<GameObject>(_asset).Completed += (callback =>
         {
+            isloadingAsset = true;
             if (callback.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
             {
                 InstantiateAsyncFromCloud(callback);
@@ -248,7 +260,29 @@ public class Cloud : MonoBehaviour
 
     void InstantiateAsyncFromCloud(AsyncOperationHandle<GameObject> _asset)
     {
-        Instantiate(_asset.Result, parent_canvas);
+        isloadingAsset = Instantiate(_asset.Result, parent_canvas);
         //isSpawning = false;
+    }
+
+    IEnumerator CheckCatalogVersion(string key)
+    {
+        RestClient client = new RestClient("https://storage.googleapis.com/cloud_patching_sample/Android");
+        RestRequest request = new RestRequest("catalog_"+ catalogKeyname +".hash", Method.GET);
+        IRestResponse response = client.Execute(request);
+        yield return response.StatusCode;
+
+        Debug.Log(response.StatusCode);
+        if(response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            Debug.Log("Catalog exist in server");
+
+            UI_MANAGER.Initialise(OnDownload, OnDownloadReject);
+            Addressables.GetDownloadSizeAsync(key).Completed += OnGettingDownloadSize;
+        }
+        else
+        {
+            Debug.Log("Catalog not exist in the server or not tally with the server api");
+            InitialiseAssetsSpawn();
+        }
     }
 }
