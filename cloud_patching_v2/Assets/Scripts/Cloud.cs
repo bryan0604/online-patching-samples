@@ -235,7 +235,7 @@ public class Cloud : MonoBehaviour
         }
     }
     
-    void InitialiseAssetsSpawn()
+    void  InitialiseAssetsSpawn()
     {
         StartCoroutine(LoadAssets(asset_background));
         StartCoroutine(LoadAssets(asset_prem_content));
@@ -248,9 +248,9 @@ public class Cloud : MonoBehaviour
             yield return frequencyshort;
         }
 
+        isloadingAsset = true;
         Addressables.LoadAssetAsync<GameObject>(_asset).Completed += (callback =>
         {
-            isloadingAsset = true;
             if (callback.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
             {
                 InstantiateAsyncFromCloud(callback);
@@ -260,7 +260,8 @@ public class Cloud : MonoBehaviour
 
     void InstantiateAsyncFromCloud(AsyncOperationHandle<GameObject> _asset)
     {
-        isloadingAsset = Instantiate(_asset.Result, parent_canvas);
+        /*isloadingAsset =*/ Instantiate(_asset.Result, parent_canvas);
+        isloadingAsset = false;
         //isSpawning = false;
     }
 

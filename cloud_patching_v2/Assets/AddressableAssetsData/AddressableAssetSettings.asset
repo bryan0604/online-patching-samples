@@ -21,7 +21,7 @@ MonoBehaviour:
     m_Id: 20f8bc4c6f60c49178daa7e4e4389454
   m_RemoteCatalogLoadPath:
     m_Id: 8c87cbccd91634a57abf747f314c217b
-  m_overridePlayerVersion: 25
+  m_overridePlayerVersion: 2
   m_GroupAssets:
   - {fileID: 11400000, guid: aaccfd19984b44428b41bc7962492680, type: 2}
   - {fileID: 11400000, guid: c83b89a0dcfa7402fac8413f18f2cf53, type: 2}

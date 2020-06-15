@@ -43,8 +43,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - default
-    m_MainAsset: {fileID: 102900000, guid: eb3a3527781e64480aa68ced4efa3f49, type: 3}
-    m_TargetAsset: {fileID: 102900000, guid: eb3a3527781e64480aa68ced4efa3f49, type: 3}
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: f624b861f5a9b9642af0c9ce7e30ee58
     m_Address: Assets/ScriptableObjects/Storage.asset
     m_ReadOnly: 0
