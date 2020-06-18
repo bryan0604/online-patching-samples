@@ -21,7 +21,7 @@ MonoBehaviour:
     m_Id: 20f8bc4c6f60c49178daa7e4e4389454
   m_RemoteCatalogLoadPath:
     m_Id: 8c87cbccd91634a57abf747f314c217b
-  m_overridePlayerVersion: 2
+  m_overridePlayerVersion: 16
   m_GroupAssets:
   - {fileID: 11400000, guid: aaccfd19984b44428b41bc7962492680, type: 2}
   - {fileID: 11400000, guid: c83b89a0dcfa7402fac8413f18f2cf53, type: 2}
@@ -35,6 +35,20 @@ MonoBehaviour:
     - m_InheritedParent: 
       m_Id: 66d661bc6b1c64d25b5fa8794354a583
       m_ProfileName: Default
+      m_Values:
+      - m_Id: eb97728a172354bf9b05969bb91214a6
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: dfc113564640546f786b0089225ca17f
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: d5e6f69b3843f4aa4b63495ec31900ee
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 20f8bc4c6f60c49178daa7e4e4389454
+        m_Value: ServerData/[BuildTarget]
+      - m_Id: 8c87cbccd91634a57abf747f314c217b
+        m_Value: https://storage.googleapis.com/cloud_patching_sample/[BuildTarget]
+    - m_InheritedParent: 
+      m_Id: 73628e7cb0fd232449e1fb1e587e7cab
+      m_ProfileName: For Android
       m_Values:
       - m_Id: eb97728a172354bf9b05969bb91214a6
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'

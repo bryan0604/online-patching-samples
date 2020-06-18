@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -10,6 +7,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.UI;
 using RestSharp;
+using System.IO;
+//using UnityEditor.AddressableAssets.Settings;
 
 public class Cloud : MonoBehaviour
 {
@@ -17,6 +16,7 @@ public class Cloud : MonoBehaviour
     public AssetReference asset_prem_content;
     public GameObject image_go;
     public Transform parent_canvas;
+    public InputField inputfield_patchkey;
     public List<Button> Buttons = new List<Button>();
     public bool proceedDownloadingPatch = false;
     public bool isCheckedPatch = false;
@@ -27,6 +27,7 @@ public class Cloud : MonoBehaviour
     public bool foundpacket = false;
     public bool autoUpdate = false;
     public bool isloadingAsset = false;
+    public bool contentCatalogLoaded = false;
     public string catalogKeyname = "";
     public string downloadKey = "";
     [SerializeField] bool isCloudInit = false;
@@ -34,11 +35,28 @@ public class Cloud : MonoBehaviour
     bool isSpawning = false;
     UserInterface UI_MANAGER;
     WaitForSeconds frequencyshort = new WaitForSeconds(0.5f);
-
+    ResourceLocationMap map;
+    //[SerializeField]
+    //AddressableAssetSettings assetsSettings;
+   
     private void Awake()
     {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        Cache path = new Cache();
+        Debug.Log(path.path);
+        if (Directory.Exists(path.path))
+        {
+            using (var stream = System.IO.File.OpenWrite(path.path))
+            using (var writer = new System.IO.StreamWriter(stream))
+            {
+                writer.Write("asdfe");
+            }
+        }
+
+#endif
         Buttons[0].onClick.AddListener(() => StartCoroutine(Process()));
         Buttons[1].onClick.AddListener(()=> InvokeRepeating("CheckEveryXSeconds",1f,1f));
+        inputfield_patchkey.onValueChanged.AddListener((string arg0) => catalogKeyname = arg0);
         UI_MANAGER = GetComponent<UserInterface>();
     }
 
@@ -55,8 +73,8 @@ public class Cloud : MonoBehaviour
             CancelInvoke("CheckEveryXSeconds");
             return;
         }
-        
-        Addressables.CheckForCatalogUpdates(false).Completed += OnCheckingCatalogs;
+
+        //Addressables.CheckForCatalogUpdates(false).Completed += OnCheckingCatalogs;
     }
     void InitDone(AsyncOperationHandle<IResourceLocator> obj)
     {
@@ -69,72 +87,138 @@ public class Cloud : MonoBehaviour
         }
     }
 
-    void OnCheckingCatalogs(AsyncOperationHandle<List<string>> cb_checkforupdates)
-    {
-        Debug.Log(cb_checkforupdates.Status);
+    #region Old Version Check Catalogs
+    //void OnCheckingCatalogs(AsyncOperationHandle<List<string>> cb_checkforupdates)
+    //{
+    //    Debug.Log(cb_checkforupdates.Status);
 
-        if(cb_checkforupdates.Status == AsyncOperationStatus.Succeeded)
-        {
-            isCatalogChecked = true;
-            Debug.LogError(cb_checkforupdates.Task.Result.Count );
-            Debug.LogError(cb_checkforupdates.Result.Count);
+    //    if(cb_checkforupdates.Status == AsyncOperationStatus.Succeeded)
+    //    {
+    //        isCatalogChecked = true;
+    //        Debug.LogError(cb_checkforupdates.Task.Result.Count );
+    //        Debug.LogError(cb_checkforupdates.Result.Count);
        
-            //Debug.LogError(Addressables.ResourceLocators.First<IResourceLocator>().Keys.First());
+    //        //Debug.LogError(Addressables.ResourceLocators.First<IResourceLocator>().Keys.First());
             
-            if(cb_checkforupdates.Result.Count == 0)
+    //        if(cb_checkforupdates.Result.Count == 0)
+    //        {
+    //            isCheckedPatch = true;
+    //            requireDownloadPatch = false;
+    //            return;
+    //        }
+    //        else
+    //        {
+    //            for (int i = 0; i < cb_checkforupdates.Result.Count; i++)
+    //            {
+    //                Debug.LogError("patch - " + cb_checkforupdates.Result[i]);
+    //            }
+    //        }
+
+    //        foreach (var item in Addressables.ResourceLocators)
+    //        {
+    //            //Debug.LogWarning(item + " || " + item.Keys + " || " + item.LocatorId + " || " + item.Keys.Count());
+
+    //            if(item.GetType() == typeof(ResourceLocationMap))
+    //            {
+    //                ResourceLocationMap map = (ResourceLocationMap)item;
+    //                Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
+
+    //                foreach (var loc in locations)
+    //                {
+    //                    Debug.Log(loc.Key + " || " + loc.Value + " || " + loc.Value[0].PrimaryKey + " || " + loc.Value[0].DependencyHashCode);
+    //                    if (loc.Key.Equals("default"))
+    //                    {
+    //                        Debug.Log("Found the packet!");
+    //                        foundpacket = true;
+
+    //                        downloadKey = loc.Key.ToString();
+    //                        StartCoroutine(CheckCatalogVersion(downloadKey));
+    //                        break;
+    //                    }
+    //                    else
+    //                    {
+    //                        continue;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+    #endregion
+
+    #region New Version Check Catalogs
+    IEnumerator CheckCatalogVersion(AsyncOperationHandle<List<string>> cb_checkforupdates)
+    {
+        if (cb_checkforupdates.Result.Count > 0)
+        {
+            Debug.LogError("There is a catalog - patch...");
+            // Moving to DownloadScriptsManager
+            RestClient client = new RestClient("https://storage.googleapis.com/cloud_patching_sample/Android");
+            RestRequest request = new RestRequest("catalog_" + catalogKeyname + ".hash", Method.GET);
+            IRestResponse response = client.Execute(request);
+            yield return response.StatusCode;
+            // Moving to DownloadScriptsManager
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                isCheckedPatch = true;
-                requireDownloadPatch = false;
-                return;
+                Debug.Log("Catalog exist in server");
+                requireDownloadPatch = true;
+                LocateResourcesPatch();
             }
             else
             {
-                for (int i = 0; i < cb_checkforupdates.Result.Count; i++)
-                {
-                    Debug.LogError("patch - " + cb_checkforupdates.Result[i]);
-                }
+                Debug.Log("Catalog not exist in the server or not tally with the server api");
+                //InitialiseAssetsSpawn();
             }
+        }
+        else
+        {
+            Debug.Log("There isn't any patch...");
+            requireDownloadPatch = false;
+        }
+        isCheckedPatch = true;
+        isCatalogChecked = true;
+    }
+    void LocateResourcesPatch()
+    {
+        Debug.Log("Locating resource....");
+        foreach (var item in Addressables.ResourceLocators)
+        {
+            //Debug.LogWarning(item + " || " + item.Keys + " || " + item.LocatorId + " || " + item.Keys.Count());
 
-            foreach (var item in Addressables.ResourceLocators)
+            if (item.GetType() == typeof(ResourceLocationMap))
             {
-                //Debug.LogWarning(item + " || " + item.Keys + " || " + item.LocatorId + " || " + item.Keys.Count());
+                //ResourceLocationMap map = (ResourceLocationMap)item;
+                Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
 
-                if(item.GetType() == typeof(ResourceLocationMap))
+                foreach (var loc in locations)
                 {
-                    ResourceLocationMap map = (ResourceLocationMap)item;
-                    Dictionary<object, IList<IResourceLocation>> locations = map.Locations;
-
-                    foreach (var loc in locations)
+                    //Debug.Log(loc.Key + " || " + loc.Value + " || " + loc.Value[0].PrimaryKey + " || " + loc.Value[0].DependencyHashCode);
+                    if (loc.Key.Equals("default"))
                     {
-                        Debug.Log(loc.Key + " || " + loc.Value + " || " + loc.Value[0].PrimaryKey + " || " + loc.Value[0].DependencyHashCode);
-                        if (loc.Key.Equals("default"))
-                        {
-                            Debug.Log("Found the packet!");
-                            foundpacket = true;
-
-                            downloadKey = loc.Key.ToString();
-                            StartCoroutine(CheckCatalogVersion(downloadKey));
-                            break;
-                        }
-                        else
-                        {
-                            continue;
-                        }
+                        Debug.Log("Found the packet!");
+                 
+                        foundpacket = true;
+                        downloadKey = loc.Key.ToString();
+                       
+                        Addressables.GetDownloadSizeAsync(downloadKey).Completed += OnGettingDownloadSize;
+                        UI_MANAGER.Initialise(OnDownload, OnDownloadReject);
+                        break;
+                    }
+                    else
+                    {
+                        continue;
                     }
                 }
             }
         }
+
     }
+    #endregion
 
     void OnUpdateCatalogs(AsyncOperationHandle<List<IResourceLocator>> cb_updatecatalog)
     {
         Debug.Log(cb_updatecatalog.Status);
         downloadDone = true;
-        foreach (var loc in cb_updatecatalog.Result)
-        {
-            Debug.Log(loc.Keys);
-            Debug.Log(loc.LocatorId);
-        }
     }
 
     void OnGettingDownloadSize(AsyncOperationHandle<System.Int64> cb_getdownloadsize)
@@ -166,8 +250,16 @@ public class Cloud : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
+        Addressables.ClearResourceLocators();
+      
+        Addressables.LoadContentCatalogAsync("https://storage.googleapis.com/cloud_patching_sample/Android/catalog_"+catalogKeyname+".json").Completed += Cloud_Completed;
+        while (contentCatalogLoaded != true)
+        {
+            yield return frequencyshort;
+        }
 
-        Addressables.CheckForCatalogUpdates().Completed += OnCheckingCatalogs;
+        Addressables.CheckForCatalogUpdates(false).Completed += (AsyncOperationHandle<List<string>> cb_checkforupdates) => StartCoroutine(CheckCatalogVersion(cb_checkforupdates));
+        //StartCoroutine(CheckCatalogVersion());
 
         while (isCheckedPatch != true)
         {
@@ -211,17 +303,12 @@ public class Cloud : MonoBehaviour
 
                 Addressables.UpdateCatalogs().Completed += OnUpdateCatalogs;
 
-                while(downloadDone != true)
+                while (downloadDone != true)
                 {
                     yield return new WaitForSeconds(0.25f);
                 }
 
-                if (downloadDone)
-                {
-                    StartCoroutine(LoadAssets(asset_background));
-                    yield return new WaitForSeconds(0.25f);
-                    StartCoroutine(LoadAssets(asset_prem_content));
-                }
+                InitialiseAssetsSpawn();
             }
             else
             {
@@ -234,7 +321,18 @@ public class Cloud : MonoBehaviour
             InitialiseAssetsSpawn();
         }
     }
-    
+
+    private void Cloud_Completed(AsyncOperationHandle<IResourceLocator> obj)
+    {
+        Addressables.AddResourceLocator(obj.Result);
+        Debug.LogError(obj.Result);
+        Debug.LogError(obj.Result.Keys);
+        Debug.LogError(obj.Result.LocatorId);
+        map = (ResourceLocationMap)obj.Result;
+
+        contentCatalogLoaded = true;
+    }
+
     void  InitialiseAssetsSpawn()
     {
         StartCoroutine(LoadAssets(asset_background));
@@ -249,6 +347,7 @@ public class Cloud : MonoBehaviour
         }
 
         isloadingAsset = true;
+        
         Addressables.LoadAssetAsync<GameObject>(_asset).Completed += (callback =>
         {
             if (callback.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
@@ -263,27 +362,5 @@ public class Cloud : MonoBehaviour
         /*isloadingAsset =*/ Instantiate(_asset.Result, parent_canvas);
         isloadingAsset = false;
         //isSpawning = false;
-    }
-
-    IEnumerator CheckCatalogVersion(string key)
-    {
-        RestClient client = new RestClient("https://storage.googleapis.com/cloud_patching_sample/Android");
-        RestRequest request = new RestRequest("catalog_"+ catalogKeyname +".hash", Method.GET);
-        IRestResponse response = client.Execute(request);
-        yield return response.StatusCode;
-
-        Debug.Log(response.StatusCode);
-        if(response.StatusCode == System.Net.HttpStatusCode.OK)
-        {
-            Debug.Log("Catalog exist in server");
-
-            UI_MANAGER.Initialise(OnDownload, OnDownloadReject);
-            Addressables.GetDownloadSizeAsync(key).Completed += OnGettingDownloadSize;
-        }
-        else
-        {
-            Debug.Log("Catalog not exist in the server or not tally with the server api");
-            InitialiseAssetsSpawn();
-        }
     }
 }
